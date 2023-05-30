@@ -1,7 +1,7 @@
 package mx.unam.ciencias.edd;
 
 /**
- *Enumeración para colores de nodos. Es trivial agregar más colores de ser
+ * Enumeración para colores de nodos. Es trivial agregar más colores de ser
  * necesarios.
  */
 public enum Color {

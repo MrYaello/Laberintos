@@ -110,11 +110,12 @@ public class Maze {
     solve = new Lista<>();
     for (VerticeGrafica<Cell> c : maze.dijkstra(start, end)) {
       solve.agrega(c.get());
-    };
+    }
     return solve;
   }
 
   public String drawMaze(boolean solve) {
+    if (cells == null) throw new IllegalStateException("El laberinto no está inicializado");
     GrapherSVG graph = new GrapherSVG();
     String s = "";
     s += graph.initSVG((width * 20) + (20 * 2), (height * 20) + (20 * 2));
@@ -125,7 +126,7 @@ public class Maze {
         if (cells[i][j].isFar) s += graph.drawCircle(10 + (cells[i][j].getX() + 1) * 20, 10 + (cells[i][j].getY() + 1) * 20, 7, "none", "purple");
       }
     }
-    if (solve) s += drawSolution();
+    if (solve) { this.solve(); s += drawSolution(); }
     s += graph.closeSVG();
     return s;
   }

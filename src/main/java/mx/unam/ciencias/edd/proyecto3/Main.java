@@ -5,7 +5,6 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 
 public class Main extends Flags {
 
@@ -37,7 +36,6 @@ public class Main extends Flags {
     if (args.length == 0 && !generate()) {
       read();
       maze.build(matrix);
-      maze.solve();
       System.out.println(maze.drawMaze(true));
     }
     else maze.generate();
@@ -46,7 +44,7 @@ public class Main extends Flags {
   public void read() {
     BufferedReader reader =  new BufferedReader(new InputStreamReader(System.in, StandardCharsets.ISO_8859_1));
     try {
-      int ch = -1;
+      int ch;
       int M = reader.read();
       int A = reader.read();
       int Z = reader.read();

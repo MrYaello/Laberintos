@@ -4,6 +4,7 @@ import mx.unam.ciencias.edd.*;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 public class Main extends Flags {
@@ -12,7 +13,7 @@ public class Main extends Flags {
           "a) java -jar target/proyecto3.jar < ejemplo.mze > solucion.svg"  + "\n" +
           "b) cat ejemplo.mze | java -jar target/proyecto3.jar > solucion.svg"  + "\n" +
           "Para generar un laberinto se debe invocar de la siguiente forma ej.:" + "\n" +
-          "a) java -jar target/proyecto3.jar -g -s <Semilla> -w <Ancho> -h <Alto> > ejemplo.mze"  + "\n" +
+          "a) java -jar target/proyecto3.jar -g -s <Semilla> -w <Ancho> -h <Alto>"  + "\n" +
           "-) -g           --- Indica que hay que generar un laberinto."  + "\n" +
           "-) -s <Semilla> --- (Opcional) La semilla para generar el laberinto."  + "\n" +
           "-) -w <Ancho>   --- Número de columnas del laberinto."  + "\n" +
@@ -35,19 +36,15 @@ public class Main extends Flags {
 
     if (args.length == 0 && !generate()) {
       read();
+      maze.build(matrix);
       maze.solve();
+      System.out.println(maze.drawMaze(true));
     }
     else maze.generate();
-
-    System.out.println(width);
-    System.out.println(height);
-    for (int[] matr: matrix) {
-      System.out.println(Arrays.toString(matr));
-    }
   }
 
   public void read() {
-    BufferedReader reader =  new BufferedReader(new InputStreamReader(System.in));
+    BufferedReader reader =  new BufferedReader(new InputStreamReader(System.in, StandardCharsets.ISO_8859_1));
     try {
       int ch = -1;
       int M = reader.read();
@@ -59,13 +56,13 @@ public class Main extends Flags {
       if (M != 77 || A != 65 || Z != 90 || E != 69) throw new Exception();
       if ((height < 2 || height > 255) || (width < 2 || width > 255)) throw new Exception();
       matrix = new int[height][width];
-      for (int i = 0; i < height; i++) {
-        for (int j = 0; j < width; j++) {
-          matrix[i][j] = reader.read();
-        }
-      }
+      for (int i = 0; i < height; i++)
+        for (int j = 0; j < width; j++)
+          if ((ch = reader.read()) == -1 || ch > 255) throw new Exception();
+          else matrix[i][j] = ch;
+      if (reader.read() != -1) throw new Exception();
     } catch (Exception e) {
-      e.printStackTrace();
+      error("El laberinto es inválido.");
     } finally {
       try {
         reader.close();

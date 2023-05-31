@@ -1,17 +1,17 @@
-package mx.unam.ciencias.edd.Proyecto1;
-
-import mx.unam.ciencias.edd.Cola;
+package mx.unam.ciencias.edd.proyecto3;
 
 /**
   * Clase que procesa las banderas recibidas por linea de comandos.
   */
 public class Flags {
-  /* ¿Se deberá aplicar reverse? */
-  private static boolean reverse;
-  /* Ruta del archivo donde se guardará la salida */
-  private static String outPathFile;
-  /* Cola de rutas de los archivos de entrada */
-  private static Cola<String> filePaths = new Cola<>();
+  /* ¿Se deberá generar un laberinto? */
+  private static boolean generate;
+  /* La semilla que se utilizará para generar el laberinto */
+  private static long seed;
+  /* Parámetro que indica el número de renglones del laberinto */
+  private static int height;
+  /* Parámetro que indica el número de columnas del laberinto */
+  private static int width;
   
   /**
     * Método que procesa los argumentos recibidos por linea 
@@ -20,37 +20,29 @@ public class Flags {
     */
   public static void flagsChecker(String[] args) {
     for (int i = 0; i < args.length; i++) {
-      if (!args[i-1 < 0 ? i : i-1].equals("-o") && args[i].contains(".")) { 
-        filePaths.mete(args[i]);
-      }
-      if (args[i].equals("-r")) reverse = true;
-      if (args[i].equals("-o")) 
-        if (i+1 < args.length) outPathFile = args[i+1];
+      if (args[i].equals("-g")) generate = true;
+      if (args[i].equals("-s"))
+        seed = Long.parseLong(args[i+1]);
+      if (args[i].equals("-w"))
+        width = Integer.parseInt(args[i+1]);
+      if (args[i].equals("-h"))
+        height = Integer.parseInt(args[i+1]);
     }
   }
-  
-  /**
-    * Regresa la cola de rutas de archivos de entrada.
-    * @return Cola<String> filePaths
-    */
-  public static Cola<String> getFilePaths() {
-    return filePaths;
-  }
-  
-  /**
-    * Regresa si deberá aplicarse reversa.
-    * @return reverse
-    */
-  public static boolean doReverse() {
-    return reverse;
-  }
-  
-  /**
-    * Regresa la ruta del archivo de salida.
-    * @return outPathFie
-    */
-  public static String getOutPathFile() {
-    return outPathFile;
+
+  public static boolean generate() {
+    return generate;
   }
 
+  public static int getWidth() {
+    return width;
+  }
+
+  public static int getHeight() {
+    return height;
+  }
+
+  public static long getSeed() {
+    return seed;
+  }
 }

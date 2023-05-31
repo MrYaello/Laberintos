@@ -1,130 +1,82 @@
 package mx.unam.ciencias.edd.proyecto3;
 
 import mx.unam.ciencias.edd.*;
-import mx.unam.ciencias.edd.proyecto3.*;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
+import java.util.Arrays;
 
-public class Main {
+public class Main extends Flags {
 
-  public GrapherStructure gs = new GrapherStructure();
-  public Lista<Integer> elements = new Lista<>();
+  private final String USE = "Para resolver un laberinto (.mze) se debe enviar por entrada estandar ej.:" + "\n" +
+          "a) java -jar target/proyecto3.jar < ejemplo.mze > solucion.svg"  + "\n" +
+          "b) cat ejemplo.mze | java -jar target/proyecto3.jar > solucion.svg"  + "\n" +
+          "Para generar un laberinto se debe invocar de la siguiente forma ej.:" + "\n" +
+          "a) java -jar target/proyecto3.jar -g -s <Semilla> -w <Ancho> -h <Alto> > ejemplo.mze"  + "\n" +
+          "-) -g           --- Indica que hay que generar un laberinto."  + "\n" +
+          "-) -s <Semilla> --- (Opcional) La semilla para generar el laberinto."  + "\n" +
+          "-) -w <Ancho>   --- Número de columnas del laberinto."  + "\n" +
+          "-) -h <Alto>    --- Número de renglones del laberinto."  + "\n";
+  private int width;
+  private int height;
+  private int[][] matrix;
+  public Maze maze;
+
+  public Main() {
+    maze = new Maze();
+  }
 
   public void start(String[] args) {
-    Read read = new Read();
-    GrapherStructure g = new GrapherStructure();
-
-    if (args.length == 0) read.read(read.standardInput());
-    else read.read(read.file(args[0]));
-    makeStructure(read.getLista());
-    String svg = gs.doGraph();
-
-    System.out.println(svg);
-  }
-
-  private void makeStructure(Lista<String> lista) {
-    setStructure(lista);
-    setElements(lista);
-
-    switch (gs.structure) {
-      case TRN:
-        gs.build4 = new ArbolRojinegro<>(elements);
-        break;
-
-      case LISTA:
-        gs.build = elements;
-        break;
-
-      case TAVL:
-        gs.build4 = new ArbolAVL<>(elements);
-        break;
-
-      case TBC:
-        gs.build4 = new ArbolBinarioCompleto<>(elements);
-        break;
-
-      case TBO:
-        gs.build4 = new ArbolBinarioOrdenado<>(elements);
-        break;
-
-      case GRAP:
-        gs.build3 = new Grafica<>();
-        break;
-
-      case COLA:
-        gs.build2 = new Cola<>();
-        while (!elements.esVacia()) gs.build2.mete(elements.eliminaPrimero());
-        break;
-
-      case PILA:
-        gs.build2 = new Pila<>();
-        while (!elements.esVacia()) gs.build2.mete(elements.eliminaPrimero());
-        break;
+    try {
+      flagsChecker(args);
+    } catch (Exception e) {
+      error(USE);
     }
 
-    if (gs.structure == Structure.GRAP) {
-      while (!elements.esVacia()) {
-        Integer a = null;
-        Integer b = null;
-        try {
-          a = elements.eliminaPrimero();
-          b = elements.eliminaPrimero();
-        } catch (Exception e) {
-          System.err.println("Para crear una gráfica se requiere un número par de elementos.");
-          System.exit(1);
+    if (args.length == 0 && !generate()) {
+      read();
+      maze.solve();
+    }
+    else maze.generate();
+
+    System.out.println(width);
+    System.out.println(height);
+    for (int[] matr: matrix) {
+      System.out.println(Arrays.toString(matr));
+    }
+  }
+
+  public void read() {
+    BufferedReader reader =  new BufferedReader(new InputStreamReader(System.in));
+    try {
+      int ch = -1;
+      int M = reader.read();
+      int A = reader.read();
+      int Z = reader.read();
+      int E = reader.read();
+      height = reader.read();
+      width =  reader.read();
+      if (M != 77 || A != 65 || Z != 90 || E != 69) throw new Exception();
+      if ((height < 2 || height > 255) || (width < 2 || width > 255)) throw new Exception();
+      matrix = new int[height][width];
+      for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+          matrix[i][j] = reader.read();
         }
-        if (a.equals(b)) gs.build3.agrega(a);
-        else if (gs.build3.contiene(a) && !gs.build3.contiene(b)) {
-          gs.build3.agrega(b);
-          gs.build3.conecta(a,b);
-        } else if (!gs.build3.contiene(a) && gs.build3.contiene(b)) {
-          gs.build3.agrega(a);
-          gs.build3.conecta(a,b);
-        } else if (!gs.build3.contiene(a) && !gs.build3.contiene(b)) {
-          gs.build3.agrega(a);
-          gs.build3.agrega(b);
-          gs.build3.conecta(a,b);
-        } else if (gs.build3.contiene(a) && gs.build3.contiene(b) && !gs.build3.sonVecinos(a,b)) 
-          gs.build3.conecta(a,b);
-      } 
-    }  
-  }
-
-  private void setStructure(Lista<String> lista) {
-    String s = lista.getPrimero().toLowerCase().split(" ")[0];
-    switch (s) {
-      case "arbolrojinegro":
-        gs.structure = Structure.TRN;
-        break;
-      case "cola":
-        gs.structure = Structure.COLA;
-        break;
-      case "pila":
-        gs.structure = Structure.PILA;
-        break;
-      case "lista":
-        gs.structure = Structure.LISTA;
-        break;
-      case "arbolavl":
-        gs.structure = Structure.TAVL;
-        break;
-      case "arbolbinariocompleto":
-        gs.structure = Structure.TBC;
-        break;
-      case "arbolbinarioordenado":
-        gs.structure = Structure.TBO;
-        break;
-      case "grafica":
-        gs.structure = Structure.GRAP;
-        break;
-      default:
-        System.err.println("La estructura de datos \"" + s + "\" no es válida.");
-        System.exit(1);
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      try {
+        reader.close();
+      } catch (IOException ex) {
+        ex.printStackTrace();
+      }
     }
   }
 
-  private void setElements(Lista<String> lista) {
-    while (!lista.esVacia())
-      for (String e : lista.eliminaPrimero().split("[^0-9]"))
-        if (e.length() > 0 && Character.isDigit(e.charAt(0))) elements.agrega(Integer.parseInt(e));  
+  private void error(String err) {
+    System.err.println(err);
+    System.exit(-1);
   }
-
 }

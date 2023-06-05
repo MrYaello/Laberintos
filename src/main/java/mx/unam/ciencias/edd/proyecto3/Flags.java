@@ -5,20 +5,21 @@ package mx.unam.ciencias.edd.proyecto3;
   */
 public class Flags {
   /* ¿Se deberá generar un laberinto? */
-  private static boolean generate;
+  private boolean generate;
   /* La semilla que se utilizará para generar el laberinto */
-  private static long seed;
+  private long seed;
   /* Parámetro que indica el número de renglones del laberinto */
-  private static int height;
+  private int height;
   /* Parámetro que indica el número de columnas del laberinto */
-  private static int width;
+  private int width;
   
   /**
     * Método que procesa los argumentos recibidos por linea 
     * de comandos.
     * @param args - Argumentos de linea de comandos.
     */
-  public static void flagsChecker(String[] args) {
+  public void flagsChecker(String[] args) {
+    if (args.length == 0) return;
     for (int i = 0; i < args.length; i++) {
       if (args[i].equals("-g")) generate = true;
       if (args[i].equals("-s"))
@@ -28,21 +29,23 @@ public class Flags {
       if (args[i].equals("-h"))
         height = Integer.parseInt(args[i+1]);
     }
+    if (generate() && (width == 0 || height == 0)) throw new IllegalArgumentException("Se debe proporcionar altura y ancho.");
+    if (width < 2 || width > 255 || height < 2 || height > 255) throw new IllegalArgumentException("Los valores de altura o ancho son inválidos.");
   }
 
-  public static boolean generate() {
+  public boolean generate() {
     return generate;
   }
 
-  public static int getWidth() {
+  public int getWidth() {
     return width;
   }
 
-  public static int getHeight() {
+  public int getHeight() {
     return height;
   }
 
-  public static long getSeed() {
+  public long getSeed() {
     return seed;
   }
 }

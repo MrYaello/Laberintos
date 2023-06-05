@@ -56,25 +56,19 @@ public class Maze {
   private Cell[][] cells;
   public Lista<Cell> solve;
   private Cell start, end;
-  private int width;
-  private int height;
+  public int width;
+  public int height;
+  public long seed;
   public Grafica<Cell> maze = new Grafica<>();
   public Maze() { }
 
-  public Maze(int height, int width) {
-    this.height = height;
-    this.width = width;
-  }
-
   public void build(int[][] matrix) {
-    height = matrix.length;
-    width = matrix[0].length;
     cells = new Cell[height][width];
     for (int i = 0; i < height; i++) {
       for (int j = 0; j < width; j++) {
-        String[] bitScore = String.format("%8s", Integer.toBinaryString(matrix[i][j])).replaceAll(" ", "0").substring(0, 4).split("");
+        String bitScore = String.format("%8s", Integer.toBinaryString(matrix[i][j])).replaceAll(" ", "0").substring(0, 4);
         char[] gates = String.format("%8s", Integer.toBinaryString(matrix[i][j])).replaceAll(" ", "0").substring(4, 8).toCharArray();
-        byte score = (byte) (Integer.parseInt(bitScore[3]) + Integer.parseInt(bitScore[2]) * 2 + Integer.parseInt(bitScore[1]) * 4 + Integer.parseInt(bitScore[0]) * 8);
+        byte score = (byte) Integer.parseInt(bitScore, 2);
         cells[i][j] = new Cell(gates[0] == '1', gates[1] == '1', gates[2] == '1', gates[3] == '1', score, j, i);
         maze.agrega(cells[i][j]);
       }
@@ -105,7 +99,25 @@ public class Maze {
     }
   }
 
-  public void generate() {}
+  public void build(int w, int h, long seed) {
+    width = w;
+    height = h;
+    this.seed = seed;
+  }
+
+  public String generate() {
+    String s = "";
+    Random rng = seed != 0 ? new Random(seed) : new Random();
+    s += "MAZE";
+    s += (char) width;
+    s += (char) height;
+    for (int i = 0; i < height; i++) {
+      for (int j = 0; j < width; j++) {
+        s += (char) rng.nextInt(256);
+      }
+    }
+    return s;
+  }
   public Lista<Cell> solve() {
     solve = new Lista<>();
     for (VerticeGrafica<Cell> c : maze.dijkstra(start, end)) {

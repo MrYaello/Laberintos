@@ -17,8 +17,6 @@ public class Main extends Flags {
           "-) -s <Semilla> --- (Opcional) La semilla para generar el laberinto."  + "\n" +
           "-) -w <Ancho>   --- Número de columnas del laberinto."  + "\n" +
           "-) -h <Alto>    --- Número de renglones del laberinto."  + "\n";
-  private int width;
-  private int height;
   private int[][] matrix;
   public Maze maze;
 
@@ -36,9 +34,12 @@ public class Main extends Flags {
     if (args.length == 0 && !generate()) {
       read();
       maze.build(matrix);
-      System.out.println(maze.drawMaze(true));
+      System.out.println(maze.drawMaze(false));
     }
-    else maze.generate();
+    else {
+      maze.build(getWidth(), getHeight(), getSeed());
+      System.out.println(maze.generate());
+    }
   }
 
   public void read() {
@@ -49,23 +50,23 @@ public class Main extends Flags {
       int A = reader.read();
       int Z = reader.read();
       int E = reader.read();
-      height = reader.read();
-      width =  reader.read();
+      maze.height = reader.read();
+      maze.width =  reader.read();
       if (M != 77 || A != 65 || Z != 90 || E != 69) throw new Exception();
-      if ((height < 2 || height > 255) || (width < 2 || width > 255)) throw new Exception();
-      matrix = new int[height][width];
-      for (int i = 0; i < height; i++)
-        for (int j = 0; j < width; j++)
+      if ((maze.height < 2 || maze.height > 255) || (maze.width < 2 || maze.width > 255)) throw new Exception("El formato del archivo es inválido, el ancho y el alto son muy grandes.");
+      matrix = new int[maze.height][maze.width];
+      for (int i = 0; i < maze.height; i++)
+        for (int j = 0; j < maze.width; j++)
           if ((ch = reader.read()) == -1 || ch > 255) throw new Exception();
           else matrix[i][j] = ch;
-      if (reader.read() != -1) throw new Exception();
+      if (reader.read() != -1) throw new Exception("El formato del archivo es inválido, tiene más elementos de los necesarios.");
     } catch (Exception e) {
-      error("El laberinto es inválido.");
+      System.out.println(e);;
     } finally {
       try {
         reader.close();
       } catch (IOException ex) {
-        ex.printStackTrace();
+        error("Esto no deberia pasar.");
       }
     }
   }

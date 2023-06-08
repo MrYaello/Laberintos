@@ -38,7 +38,7 @@ public class Main extends Flags {
     }
     else {
       maze.build(getWidth(), getHeight(), getSeed());
-      System.out.println(maze.generate());
+      System.out.println(maze.drawMaze(false));
     }
   }
 
@@ -61,7 +61,7 @@ public class Main extends Flags {
           else matrix[i][j] = ch;
       if (reader.read() != -1) throw new Exception("El formato del archivo es inválido, tiene más elementos de los necesarios.");
     } catch (Exception e) {
-      System.out.println(e);;
+      System.out.println(e);
     } finally {
       try {
         reader.close();

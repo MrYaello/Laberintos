@@ -24,9 +24,9 @@ public class GrapherSVG {
   }
 
   public String drawCell(int x, int y, boolean d, boolean l, boolean u, boolean r) {
-    return (d ? drawLine(x - 10, y + 10, x + 10, y + 10, "black") : "") +
-            (l ? drawLine(x - 10, y - 10, x - 10, y + 10, "black") : "") +
-            (u ? drawLine(x - 10, y - 10, x + 10, y - 10, "black") : "") +
-            (r ? drawLine(x + 10, y - 10, x + 10, y + 10, "black") : "");
+    return (d ? drawLine(x - 10, y + 10, x + 10, y + 10, "black") : "\n") +
+            (l ? drawLine(x - 10, y - 10, x - 10, y + 10, "black") : "\n") +
+            (u ? drawLine(x - 10, y - 10, x + 10, y - 10, "black") : "\n") +
+            (r ? drawLine(x + 10, y - 10, x + 10, y + 10, "black") : "\n");
   }
 }

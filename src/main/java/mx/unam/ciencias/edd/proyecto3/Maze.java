@@ -236,10 +236,10 @@ public class Maze {
     if (solve) { connectEm(); this.solve(); s.append(drawSolution()); }
     for (int i = 0; i < height; i++) {
       for (int j = 0; j < width; j++) {
-        boolean drawL = !cells[i-1 < 0 ? 0 : i - 1][j].right();
-        boolean drawU = !cells[i][j-1 < 0 ? 0 : j - 1].down();
+        boolean drawL = !cells[i][j - 1 < 0 ? 0 : j - 1].right() || j == 0;
+        boolean drawU = !cells[i - 1 < 0 ? 0 : i - 1][j].down() || i == 0;
         s.append(graph.drawCell(10 + (cells[i][j].getX() + 1) * 20, 10 + (cells[i][j].getY() + 1) * 20,
-                cells[i][j].down(), cells[i][j].left() && (drawL || j == 0), cells[i][j].up() && (i == 0 || drawU), cells[i][j].right()));
+                cells[i][j].down(), cells[i][j].left() && drawL, cells[i][j].up() && drawU, cells[i][j].right()));
         if (cells[i][j].far) s.append(graph.drawCircle(10 + (cells[i][j].getX() + 1) * 20, 10 + (cells[i][j].getY() + 1) * 20, 7, "none", "purple"));
       }
     }

@@ -37,12 +37,12 @@ public class Main extends Flags {
       System.out.println(maze.drawMaze(true));
     } else {
       maze.build(getWidth(), getHeight(), getSeed());
-      System.out.println(maze.drawMaze(false));
+      System.out.print(maze.saveMaze());
     }
   }
 
   public void read() {
-    BufferedReader reader =  new BufferedReader(new InputStreamReader(System.in, StandardCharsets.ISO_8859_1));
+    BufferedReader reader = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.ISO_8859_1));
     try {
       int ch;
       int M = reader.read();

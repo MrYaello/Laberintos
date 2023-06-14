@@ -4,8 +4,13 @@ import mx.unam.ciencias.edd.Grafica;
 import mx.unam.ciencias.edd.Lista;
 import mx.unam.ciencias.edd.Pila;
 import mx.unam.ciencias.edd.VerticeGrafica;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Random;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 
 public class Maze {
   private class Cell {
@@ -64,7 +69,7 @@ public class Maze {
 
   private Cell[][] cells;
   public Lista<Cell> solve;
-  private Cell start, end;
+  public Cell start, end;
   public int width;
   public int height;
   public long seed;
@@ -81,6 +86,16 @@ public class Maze {
         byte score = (byte) Integer.parseInt(bitScore, 2);
         cells[i][j] = new Cell(gates[0] == '1', gates[1] == '1', gates[2] == '1', gates[3] == '1', score, j, i);
         maze.agrega(cells[i][j]);
+        if (i == 0 && !cells[i][j].up()) cells[i][j].far = true;
+        if (i == height - 1 && !cells[i][j].down()) cells[i][j].far = true;
+        if (j == width - 1 && !cells[i][j].right()) cells[i][j].far = true;
+        if (j == 0 && !cells[i][j].left()) cells[i][j].far = true;
+        if (cells[i][j].far && start == null) {
+          start = cells[i][j];
+        }
+        else if (cells[i][j].far && start != null) {
+          end = cells[i][j];
+        }
       }
     }
   }
@@ -153,13 +168,14 @@ public class Maze {
         return cells[random][width - 1];
       default:
         //Esto nunca ocurre.
-        return new Cell();
+        return null;
     }
   }
 
-  private void connectEm() {
+  private void createGraph() {
     for (int i = 0; i < height; i++) {
       for (int j = 0; j < width; j++) {
+        maze.agrega(cells[i][j]);
         if (i == 0 && !cells[i][j].up()) cells[i][j].far = true;
         if (i == height - 1 && !cells[i][j].down()) cells[i][j].far = true;
         if (j == width - 1 && !cells[i][j].right()) cells[i][j].far = true;
@@ -170,6 +186,13 @@ public class Maze {
         else if (cells[i][j].far && start != null) {
           end = cells[i][j];
         }
+      }
+    }
+  }
+
+  private void connectEm() {
+    for (int i = 0; i < height; i++) {
+      for (int j = 0; j < width; j++) {
         cells[i][j].gatesScore[3] = (byte) (1 + (cells[i][j].right() ? 0 : cells[i][j].score + (cells[i][j].far ? 0 : cells[i][j + 1].score)));
         cells[i][j].gatesScore[2] = (byte) (1 + (cells[i][j].up() ? 0 : cells[i][j].score + (cells[i][j].far ? 0 : cells[i - 1][j].score)));
         cells[i][j].gatesScore[1] = (byte) (1 + (cells[i][j].left() ? 0 : cells[i][j].score + (cells[i][j].far ? 0 : cells[i][j - 1].score)));
@@ -233,14 +256,21 @@ public class Maze {
     GrapherSVG graph = new GrapherSVG();
     StringBuilder s = new StringBuilder();
     s.append(graph.initSVG((width * 20) + (20 * 2), (height * 20) + (20 * 2)));
-    if (solve) { connectEm(); this.solve(); s.append(drawSolution()); }
+    if (solve) {
+      if (maze.getElementos() == 0) createGraph();
+      connectEm();
+      solve();
+      s.append(drawSolution());
+    }
     for (int i = 0; i < height; i++) {
       for (int j = 0; j < width; j++) {
         boolean drawL = !cells[i][j - 1 < 0 ? 0 : j - 1].right() || j == 0;
         boolean drawU = !cells[i - 1 < 0 ? 0 : i - 1][j].down() || i == 0;
         s.append(graph.drawCell(10 + (cells[i][j].getX() + 1) * 20, 10 + (cells[i][j].getY() + 1) * 20,
                 cells[i][j].down(), cells[i][j].left() && drawL, cells[i][j].up() && drawU, cells[i][j].right()));
-        if (cells[i][j].far) s.append(graph.drawCircle(10 + (cells[i][j].getX() + 1) * 20, 10 + (cells[i][j].getY() + 1) * 20, 7, "none", "purple"));
+        if (cells[i][j].equals(end)) s.append(graph.drawCircle(10 + (cells[i][j].getX() + 1) * 20, 10 + (cells[i][j].getY() + 1) * 20, 7, "none", "red"));
+        if (cells[i][j].equals(start)) s.append(graph.drawCircle(10 + (cells[i][j].getX() + 1) * 20, 10 + (cells[i][j].getY() + 1) * 20, 7, "none", "blue"));
+        if (cells[i][j].far) s.append(graph.drawCircle(10 + (cells[i][j].getX() + 1) * 20, 10 + (cells[i][j].getY() + 1) * 20, 3, "none", "purple"));
       }
     }
     s.append(graph.closeSVG());
@@ -260,16 +290,19 @@ public class Maze {
   }
 
   public String saveMaze() {
-    StringBuilder s = new StringBuilder();
-    s.append("MAZE");
-    s.append((char) height);
-    s.append((char) width);
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    out.write(77);
+    out.write(65);
+    out.write(90);
+    out.write(69);
+    out.write(height);
+    out.write(width);
     for (int i = 0; i < height; i++) {
       for (int j = 0; j < width; j++) {
-        s.append((char) (Integer.parseInt(Integer.toBinaryString(cells[i][j].score) + (cells[i][j].down() ? 1 : 0) + (cells[i][j].left() ? 1 : 0) + (cells[i][j].up() ? 1 : 0) + (cells[i][j].right() ? 1 : 0), 2)));
+        out.write(Integer.parseInt(Integer.toBinaryString(cells[i][j].score) + (cells[i][j].down() ? 1 : 0) + (cells[i][j].left() ? 1 : 0) + (cells[i][j].up() ? 1 : 0) + (cells[i][j].right() ? 1 : 0), 2));
       }
     }
-    return s.toString();
+    return out.toString(StandardCharsets.ISO_8859_1);
   }
 
   public void print() {

@@ -2,7 +2,10 @@ package mx.unam.ciencias.edd.proyecto3;
 
 import mx.unam.ciencias.edd.Grafica;
 import mx.unam.ciencias.edd.Lista;
+import mx.unam.ciencias.edd.Pila;
 import mx.unam.ciencias.edd.VerticeGrafica;
+
+import java.security.spec.RSAOtherPrimeInfo;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -11,7 +14,7 @@ public class Maze {
     int x, y;
     byte score;
     boolean visited;
-    boolean isFar;
+    boolean far;
     boolean[] gates;
     byte[] gatesScore;
 
@@ -53,7 +56,7 @@ public class Maze {
     public String toString() {
       //return String.format("%d" + (isFar ? " {%s, %s, %s, %s}" : ""), score, down(), left(), up(), right());
       //return "{" + isFar + "}";
-      return String.format("%d {%d, %d} %s", score, x, y, Arrays.toString(gates));
+      return String.format("%d {%d, %d} %s", score, x, y, visited);
     }
 
     public boolean equals(Cell cell) {
@@ -82,30 +85,6 @@ public class Maze {
         maze.agrega(cells[i][j]);
       }
     }
-    for (int i = 0; i < height; i++) {
-      for (int j = 0; j < width; j++) {
-        if (i == 0 && !cells[i][j].up()) cells[i][j].isFar = true;
-        if (i == height - 1 && !cells[i][j].down()) cells[i][j].isFar = true;
-        if (j == width - 1 && !cells[i][j].right()) cells[i][j].isFar = true;
-        if (j == 0 && !cells[i][j].left()) cells[i][j].isFar = true;
-        if (cells[i][j].isFar && start == null) {
-          start = cells[i][j];
-        }
-        else if (cells[i][j].isFar && start != null) {
-          end = cells[i][j];
-        }
-        cells[i][j].gatesScore[3] = (byte) (1 + (cells[i][j].right() ? 0 : cells[i][j].score + (cells[i][j].isFar ? 0 : cells[i][j+1].score)));
-        cells[i][j].gatesScore[2] = (byte) (1 + (cells[i][j].up() ? 0 : cells[i][j].score + (cells[i][j].isFar ? 0 : cells[i-1][j].score)));
-        cells[i][j].gatesScore[1] = (byte) (1 + (cells[i][j].left() ? 0 : cells[i][j].score + (cells[i][j].isFar ? 0 : cells[i][j-1].score)));
-        cells[i][j].gatesScore[0] = (byte) (1 + (cells[i][j].down() ? 0 : cells[i][j].score + (cells[i][j].isFar ? 0 : cells[i+1][j].score)));
-        try {
-          if (!cells[i][j].right() && j+1 < width) maze.conecta(cells[i][j], cells[i][j+1], cells[i][j].gatesScore[3]);
-          if (!cells[i][j].up() && i-1 >= 0) maze.conecta(cells[i][j], cells[i-1][j], cells[i][j].gatesScore[2]);
-          if (!cells[i][j].left() && j-1 >= 0) maze.conecta(cells[i][j], cells[i][j-1], cells[i][j].gatesScore[1]);
-          if (!cells[i][j].down() && i+1 < height) maze.conecta(cells[i][j], cells[i+1][j], cells[i][j].gatesScore[0]);
-        } catch (IllegalArgumentException ignored) {}
-      }
-    }
   }
 
   public void build(int w, int h, long seed) {
@@ -124,7 +103,6 @@ public class Maze {
       }
     }
     int start, end;
-
     do {
       start = rng.nextInt(4);
       end = rng.nextInt(4);
@@ -138,8 +116,22 @@ public class Maze {
       this.end.gates[3] = true;
       this.end = selectFars(end);
     }
-    this.start.isFar = true;
-    this.end.isFar = true;
+    this.start.far = true;
+    this.end.far = true;
+
+    Pila<Cell> dfs = new Pila<>();
+    dfs.mete(this.start);
+    this.start.visited = true;
+    while (!dfs.esVacia()) {
+      Cell cA = dfs.mira();
+      Cell cB = dig(cA);
+      if (cB == null) {
+        dfs.saca();
+        continue;
+      }
+      cB.visited = true;
+      dfs.mete(cB);
+    }
   }
 
   private Cell selectFars(int side) {
@@ -167,6 +159,69 @@ public class Maze {
     }
   }
 
+  private void connectEm() {
+    for (int i = 0; i < height; i++) {
+      for (int j = 0; j < width; j++) {
+        if (i == 0 && !cells[i][j].up()) cells[i][j].far = true;
+        if (i == height - 1 && !cells[i][j].down()) cells[i][j].far = true;
+        if (j == width - 1 && !cells[i][j].right()) cells[i][j].far = true;
+        if (j == 0 && !cells[i][j].left()) cells[i][j].far = true;
+        if (cells[i][j].far && start == null) {
+          start = cells[i][j];
+        }
+        else if (cells[i][j].far && start != null) {
+          end = cells[i][j];
+        }
+        cells[i][j].gatesScore[3] = (byte) (1 + (cells[i][j].right() ? 0 : cells[i][j].score + (cells[i][j].far ? 0 : cells[i][j + 1].score)));
+        cells[i][j].gatesScore[2] = (byte) (1 + (cells[i][j].up() ? 0 : cells[i][j].score + (cells[i][j].far ? 0 : cells[i - 1][j].score)));
+        cells[i][j].gatesScore[1] = (byte) (1 + (cells[i][j].left() ? 0 : cells[i][j].score + (cells[i][j].far ? 0 : cells[i][j - 1].score)));
+        cells[i][j].gatesScore[0] = (byte) (1 + (cells[i][j].down() ? 0 : cells[i][j].score + (cells[i][j].far ? 0 : cells[i + 1][j].score)));
+        try {
+          if (!cells[i][j].right() && j+1 < width) maze.conecta(cells[i][j], cells[i][j+1], cells[i][j].gatesScore[3]);
+          if (!cells[i][j].up() && i-1 >= 0) maze.conecta(cells[i][j], cells[i-1][j], cells[i][j].gatesScore[2]);
+          if (!cells[i][j].left() && j-1 >= 0) maze.conecta(cells[i][j], cells[i][j-1], cells[i][j].gatesScore[1]);
+          if (!cells[i][j].down() && i+1 < height) maze.conecta(cells[i][j], cells[i+1][j], cells[i][j].gatesScore[0]);
+        } catch (IllegalArgumentException ignored) {}
+      }
+    }
+  }
+
+  private Lista<Cell> possibleMoves(Cell c, boolean visited) {
+    Lista<Cell> l = new Lista<>();
+    if (isValidMove(c.x, c.y + 1) && !(cells[c.y + 1][c.x].visited ^= visited)) l.agrega(cells[c.y + 1][c.x]); // Down
+    if (isValidMove(c.x - 1, c.y) && !(cells[c.y][c.x - 1].visited ^= visited)) l.agrega(cells[c.y][c.x - 1]); // Left
+    if (isValidMove(c.x, c.y - 1) && !(cells[c.y - 1][c.x].visited ^= visited)) l.agrega(cells[c.y - 1][c.x]); // Up
+    if (isValidMove(c.x + 1, c.y) && !(cells[c.y][c.x + 1].visited ^= visited)) l.agrega(cells[c.y][c.x + 1]); // Right
+    return l;
+  }
+
+  private boolean isValidMove(int x, int y) {
+    return x >= 0 && x < width && y >= 0 && y < height;
+  }
+
+  private Cell dig(Cell c) {
+    Lista<Cell> l = possibleMoves(c, false);
+    if (l.getElementos() == 0) return null;
+    Cell goTo = l.get(rng.nextInt(l.getLongitud() < 1 ? 0 : l.getLongitud()));
+    if (goTo.y == c.y + 1) {
+      c.gates[0] = false;
+      goTo.gates[2] = false;
+    } // Down
+    if (goTo.x == c.x - 1) {
+      c.gates[1] = false;
+      goTo.gates[3] = false;
+    } // Left
+    if (goTo.y == c.y - 1) {
+      c.gates[2] = false;
+      goTo.gates[0] = false;
+    } // Up
+    if (goTo.x == c.x + 1) {
+      c.gates[3] = false;
+      goTo.gates[1] = false;
+    } // Right
+    return goTo;
+  }
+
   public Lista<Cell> solve() {
     solve = new Lista<>();
     for (VerticeGrafica<Cell> c : maze.dijkstra(start, end)) {
@@ -180,16 +235,16 @@ public class Maze {
     GrapherSVG graph = new GrapherSVG();
     StringBuilder s = new StringBuilder();
     s.append(graph.initSVG((width * 20) + (20 * 2), (height * 20) + (20 * 2)));
+    if (solve) { connectEm(); this.solve(); s.append(drawSolution()); }
     for (int i = 0; i < height; i++) {
       for (int j = 0; j < width; j++) {
         boolean drawL = cells[i-1 < 0 ? 0 : i - 1][j].right();
         boolean drawU = cells[i][j-1 < 0 ? 0 : j - 1].down();
         s.append(graph.drawCell(10 + (cells[i][j].getX() + 1) * 20, 10 + (cells[i][j].getY() + 1) * 20,
                 cells[i][j].down(), cells[i][j].left() && (!drawL || j == 0), cells[i][j].up() && (i == 0 || !drawU), cells[i][j].right()));
-        if (cells[i][j].isFar) s.append(graph.drawCircle(10 + (cells[i][j].getX() + 1) * 20, 10 + (cells[i][j].getY() + 1) * 20, 7, "none", "purple"));
+        if (cells[i][j].far) s.append(graph.drawCircle(10 + (cells[i][j].getX() + 1) * 20, 10 + (cells[i][j].getY() + 1) * 20, 7, "none", "purple"));
       }
     }
-    if (solve) { this.solve(); s.append(drawSolution()); }
     s.append(graph.closeSVG());
     return s.toString();
   }
@@ -209,8 +264,8 @@ public class Maze {
   public String saveMaze() {
     StringBuilder s = new StringBuilder();
     s.append("MAZE");
-    s.append((char) width);
     s.append((char) height);
+    s.append((char) width);
     for (int i = 0; i < height; i++) {
       for (int j = 0; j < width; j++) {
         s.append((char) (Integer.parseInt(Integer.toBinaryString(cells[i][j].score) + (cells[i][j].down() ? 1 : 0) + (cells[i][j].left() ? 1 : 0) + (cells[i][j].up() ? 1 : 0) + (cells[i][j].right() ? 1 : 0), 2)));

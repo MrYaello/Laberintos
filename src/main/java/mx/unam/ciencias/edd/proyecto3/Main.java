@@ -31,12 +31,11 @@ public class Main extends Flags {
       error(USE);
     }
 
-    if (args.length == 0 && !generate()) {
+    if (!generate()) {
       read();
       maze.build(matrix);
-      System.out.println(maze.drawMaze(false));
-    }
-    else {
+      System.out.println(maze.drawMaze(true));
+    } else {
       maze.build(getWidth(), getHeight(), getSeed());
       System.out.println(maze.drawMaze(false));
     }

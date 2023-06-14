@@ -4,8 +4,6 @@ import mx.unam.ciencias.edd.Grafica;
 import mx.unam.ciencias.edd.Lista;
 import mx.unam.ciencias.edd.Pila;
 import mx.unam.ciencias.edd.VerticeGrafica;
-
-import java.security.spec.RSAOtherPrimeInfo;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -56,7 +54,7 @@ public class Maze {
     public String toString() {
       //return String.format("%d" + (isFar ? " {%s, %s, %s, %s}" : ""), score, down(), left(), up(), right());
       //return "{" + isFar + "}";
-      return String.format("%d {%d, %d} %s", score, x, y, visited);
+      return String.format("%d {%d, %d} %s", score, x, y, Arrays.toString(gates));
     }
 
     public boolean equals(Cell cell) {
@@ -107,18 +105,18 @@ public class Maze {
       start = rng.nextInt(4);
       end = rng.nextInt(4);
     } while (start == end);
-    this.start = selectFars(start);
-    this.end = selectFars(end);
-    while (this.start.equals(this.end)) {
-      this.end.gates[0] = true;
-      this.end.gates[1] = true;
-      this.end.gates[2] = true;
-      this.end.gates[3] = true;
+    do {
+      this.start = selectFars(start);
       this.end = selectFars(end);
-    }
+      if (this.start.equals(this.end)) {
+        this.start.gates[0] = true;
+        this.start.gates[1] = true;
+        this.start.gates[2] = true;
+        this.start.gates[3] = true;
+      }
+    } while (this.start.equals(this.end));
     this.start.far = true;
     this.end.far = true;
-
     Pila<Cell> dfs = new Pila<>();
     dfs.mete(this.start);
     this.start.visited = true;
@@ -137,19 +135,19 @@ public class Maze {
   private Cell selectFars(int side) {
     int random;
     switch (side) {
-      case 0:
+      case 0: // Down
         random = rng.nextInt(width);
         cells[height - 1][random].gates[0] = false;
         return cells[height - 1][random];
-      case 1:
+      case 1: // Left
         random = rng.nextInt(height);
         cells[random][0].gates[1] = false;
         return cells[random][0];
-      case 2:
+      case 2: // Up
         random = rng.nextInt(width);
         cells[0][random].gates[2] = false;
         return cells[0][random];
-      case 3:
+      case 3: // Right
         random = rng.nextInt(height);
         cells[random][width - 1].gates[3] = false;
         return cells[random][width - 1];
@@ -186,21 +184,21 @@ public class Maze {
     }
   }
 
-  private Lista<Cell> possibleMoves(Cell c, boolean visited) {
+  private Lista<Cell> possibleMoves(Cell c) {
     Lista<Cell> l = new Lista<>();
-    if (isValidMove(c.x, c.y + 1) && !(cells[c.y + 1][c.x].visited ^= visited)) l.agrega(cells[c.y + 1][c.x]); // Down
-    if (isValidMove(c.x - 1, c.y) && !(cells[c.y][c.x - 1].visited ^= visited)) l.agrega(cells[c.y][c.x - 1]); // Left
-    if (isValidMove(c.x, c.y - 1) && !(cells[c.y - 1][c.x].visited ^= visited)) l.agrega(cells[c.y - 1][c.x]); // Up
-    if (isValidMove(c.x + 1, c.y) && !(cells[c.y][c.x + 1].visited ^= visited)) l.agrega(cells[c.y][c.x + 1]); // Right
+    if (isValidMove(c.x, c.y + 1)) l.agrega(cells[c.y + 1][c.x]); // Down
+    if (isValidMove(c.x - 1, c.y)) l.agrega(cells[c.y][c.x - 1]); // Left
+    if (isValidMove(c.x, c.y - 1)) l.agrega(cells[c.y - 1][c.x]); // Up
+    if (isValidMove(c.x + 1, c.y)) l.agrega(cells[c.y][c.x + 1]); // Right
     return l;
   }
 
   private boolean isValidMove(int x, int y) {
-    return x >= 0 && x < width && y >= 0 && y < height;
+    return x >= 0 && x < width && y >= 0 && y < height && !cells[y][x].visited;
   }
 
   private Cell dig(Cell c) {
-    Lista<Cell> l = possibleMoves(c, false);
+    Lista<Cell> l = possibleMoves(c);
     if (l.getElementos() == 0) return null;
     Cell goTo = l.get(rng.nextInt(l.getLongitud() < 1 ? 0 : l.getLongitud()));
     if (goTo.y == c.y + 1) {
@@ -238,10 +236,10 @@ public class Maze {
     if (solve) { connectEm(); this.solve(); s.append(drawSolution()); }
     for (int i = 0; i < height; i++) {
       for (int j = 0; j < width; j++) {
-        boolean drawL = cells[i-1 < 0 ? 0 : i - 1][j].right();
-        boolean drawU = cells[i][j-1 < 0 ? 0 : j - 1].down();
+        boolean drawL = !cells[i-1 < 0 ? 0 : i - 1][j].right();
+        boolean drawU = !cells[i][j-1 < 0 ? 0 : j - 1].down();
         s.append(graph.drawCell(10 + (cells[i][j].getX() + 1) * 20, 10 + (cells[i][j].getY() + 1) * 20,
-                cells[i][j].down(), cells[i][j].left() && (!drawL || j == 0), cells[i][j].up() && (i == 0 || !drawU), cells[i][j].right()));
+                cells[i][j].down(), cells[i][j].left() && (drawL || j == 0), cells[i][j].up() && (i == 0 || drawU), cells[i][j].right()));
         if (cells[i][j].far) s.append(graph.drawCircle(10 + (cells[i][j].getX() + 1) * 20, 10 + (cells[i][j].getY() + 1) * 20, 7, "none", "purple"));
       }
     }

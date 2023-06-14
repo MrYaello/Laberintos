@@ -13,9 +13,9 @@ public class GrapherSVG {
     return "\t</g>\n</svg>";
   }
 
-  public String drawLine(int x1, int y1, int x2, int y2, String color) {
+  public String drawLine(int x1, int y1, int x2, int y2, String color, int s) {
     return String.format("\t\t<line x1='%d' y1='%d' x2='%d' y2='%d'" +
-            " stroke='%s' stroke-width='3'/>" + "\n", x1, y1, x2, y2, color);
+            " stroke='%s' stroke-width='%d'/>" + "\n", x1, y1, x2, y2, color, s);
   }
 
   public String drawCircle(int x, int y, int r, String stroke, String fill) {
@@ -24,9 +24,9 @@ public class GrapherSVG {
   }
 
   public String drawCell(int x, int y, boolean d, boolean l, boolean u, boolean r) {
-    return (d ? drawLine(x - 10, y + 10, x + 10, y + 10, "black") : "\n") +
-            (l ? drawLine(x - 10, y - 10, x - 10, y + 10, "black") : "\n") +
-            (u ? drawLine(x - 10, y - 10, x + 10, y - 10, "black") : "\n") +
-            (r ? drawLine(x + 10, y - 10, x + 10, y + 10, "black") : "\n");
+    return (d ? drawLine(x - 10, y + 10, x + 10, y + 10, "black",3) : "") +
+            (l ? drawLine(x - 10, y - 10, x - 10, y + 10, "black",3 ) : "") +
+            (u ? drawLine(x - 10, y - 10, x + 10, y - 10, "black", 3) : "") +
+            (r ? drawLine(x + 10, y - 10, x + 10, y + 10, "black", 3) : "");
   }
 }

@@ -14,6 +14,9 @@ public class Maze {
     boolean isFar;
     boolean[] gates;
     byte[] gatesScore;
+
+    public Cell() { }
+
     public Cell(boolean d, boolean l, boolean u, boolean r, byte score, int x, int y) {
       gates = new boolean[]{d, l, u, r};
       this.score = score;
@@ -51,6 +54,10 @@ public class Maze {
       //return String.format("%d" + (isFar ? " {%s, %s, %s, %s}" : ""), score, down(), left(), up(), right());
       //return "{" + isFar + "}";
       return String.format("%d {%d, %d} %s", score, x, y, Arrays.toString(gates));
+    }
+
+    public boolean equals(Cell cell) {
+      return this.x == cell.x && this.y == cell.y;
     }
   }
 
@@ -113,20 +120,26 @@ public class Maze {
     cells = new Cell[height][width];
     for (int i = 0; i < height; i++) {
       for (int j = 0; j < width; j++) {
-        cells[i][j] = new Cell(true, true, true, true, (byte) rng.nextInt(16), i, j);
+        cells[i][j] = new Cell(true, true, true, true, (byte) rng.nextInt(16), j, i);
       }
     }
     int start, end;
+
     do {
       start = rng.nextInt(4);
       end = rng.nextInt(4);
     } while (start == end);
     this.start = selectFars(start);
     this.end = selectFars(end);
-    System.out.println(start);
-    System.out.println(end);
-    System.out.println(this.start);
-    System.out.println(this.end);
+    while (this.start.equals(this.end)) {
+      this.end.gates[0] = true;
+      this.end.gates[1] = true;
+      this.end.gates[2] = true;
+      this.end.gates[3] = true;
+      this.end = selectFars(end);
+    }
+    this.start.isFar = true;
+    this.end.isFar = true;
   }
 
   private Cell selectFars(int side) {
@@ -150,7 +163,7 @@ public class Maze {
         return cells[random][width - 1];
       default:
         //Esto nunca ocurre.
-        return null;
+        return new Cell();
     }
   }
 
@@ -185,7 +198,7 @@ public class Maze {
     Cell previous = null;
     for (Cell cell: solve) {
       if (previous == null) { previous = cell; continue; }
-      s.append(graph.drawLine(10 + (previous.getX() + 1) * 20, 10 + (previous.getY() + 1) * 20, 10 + (cell.getX() + 1) * 20, 10 + (cell.getY() + 1) * 20, "purple"));
+      s.append(graph.drawLine(10 + (previous.getX() + 1) * 20, 10 + (previous.getY() + 1) * 20, 10 + (cell.getX() + 1) * 20, 10 + (cell.getY() + 1) * 20, "purple", 4));
       previous = cell;
     }
     return s.toString();

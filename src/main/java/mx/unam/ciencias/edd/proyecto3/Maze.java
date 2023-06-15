@@ -37,20 +37,20 @@ public class Maze {
     byte[] gatesScore;
 
     /**
-     * Instantiates a new Cell.
+     * Constructor sin parámetros.
      */
     public Cell() { }
 
     /**
-     * Instantiates a new Cell.
+     * Constructor para inicializar una celda.
      *
-     * @param d     the d
-     * @param l     the l
-     * @param u     the u
-     * @param r     the r
-     * @param score the score
-     * @param x     the x
-     * @param y     the y
+     * @param d     ¿Hay pared abajo?
+     * @param l     ¿Hay pared izquierda?
+     * @param u     ¿Hay pared arriba?
+     * @param r     ¿Hay pared derecha?
+     * @param score puntuación de la celda
+     * @param x     coordenada en x
+     * @param y     coordenada en y
      */
     public Cell(boolean d, boolean l, boolean u, boolean r, byte score, int x, int y) {
       gates = new boolean[]{d, l, u, r};
@@ -61,158 +61,140 @@ public class Maze {
     }
 
     /**
-     * Right boolean.
+     * ¿Hay pared derecha?
      *
-     * @return the boolean
+     * @return booleano que indica si hay pared derecha
      */
     public boolean right() {
       return gates[3];
     }
 
     /**
-     * Up boolean.
+     * ¿Hay pared arriba?
      *
-     * @return the boolean
+     * @return booleano que indica si hay pared arriba
      */
     public boolean up() {
       return gates[2];
     }
 
     /**
-     * Left boolean.
+     * ¿Hay pared izquierda?
      *
-     * @return the boolean
+     * @return booleano que indica si hay pared izquierda
      */
     public boolean left() {
       return gates[1];
     }
 
     /**
-     * Down boolean.
+     * ¿Hay pared abajo?
      *
-     * @return the boolean
+     * @return booleano que indica si hay pared abajo
      */
     public boolean down() {
       return gates[0];
     }
 
     /**
-     * Gets x.
+     * Getter para la coordenada en x.
      *
-     * @return the x
+     * @return coordenada en x
      */
     public int getX() {
       return x;
     }
 
     /**
-     * Gets y.
+     * Getter para la coordenada en y.
      *
-     * @return the y
+     * @return coordenada en y
      */
     public int getY() {
       return y;
     }
 
+    /**
+     * Representación en cadena de una celda, con el siguiente formato:
+     * score {x, y} [d, l, u, r]
+     * Donde d, l, u y r son las paredes de la celda.
+     * @return cadena que representa una celda
+     */
     @Override
     public String toString() {
-      //return String.format("%d" + (isFar ? " {%s, %s, %s, %s}" : ""), score, down(), left(), up(), right());
-      //return "{" + isFar + "}";
       return String.format("%d {%d, %d} %s", score, x, y, Arrays.toString(gates));
     }
 
     /**
-     * Equals boolean.
+     * Método para comparar celdas por coordenadas.
      *
-     * @param cell the cell
-     * @return the boolean
+     * @param cell la celda a comparar
+     * @return true si tienen las mismas coordenadas, false de lo contrario
      */
     public boolean equals(Cell cell) {
       return this.x == cell.x && this.y == cell.y;
     }
 
     /**
-     * To byte byte.
+     * Método que convierte la celda a byte.
      *
-     * @return the byte
+     * @return byte que representa la celda
      */
     public byte toByte() {
       return (byte) (Integer.parseInt(Integer.toBinaryString(score) + (down() ? 1 : 0) + (left() ? 1 : 0) + (up() ? 1 : 0) + (right() ? 1 : 0), 2) & 0xFF);
     }
   }
-
+  /** Matriz de celdas que es la estructura del laberinto en sí. */
   private Cell[][] cells;
-  /**
-   * The Solve.
-   */
+  /** Lista de celdas que almacena la solución al laberinto. */
   public Lista<Cell> solve;
-  /**
-   * The Start.
-   */
-  public Cell start, /**
-   * The End.
-   */
-  end;
-  /**
-   * The Width.
-   */
+  /** Celda que almacena el inicio del laberinto. */
+  public Cell start;
+  /** Celda que almacena el final del laberinto. */
+  public Cell end;
+  /** Parámetro que indica el número de columnas del laberinto */
   public int width;
-  /**
-   * The Height.
-   */
+  /** Parámetro que indica el número de filas del laberinto */
   public int height;
-  /**
-   * The Seed.
-   */
+  /** La semilla que se utilizará para generar el laberinto */
   public long seed;
-  /**
-   * The Maze.
-   */
-  public Grafica<Cell> maze = new Grafica<>();
-  /**
-   * The Rng.
-   */
+  /** Gráfica que representará el laberinto para encontrar una solución */
+  private Grafica<Cell> maze = new Grafica<>();
+  /** El generador de números aleatorios. */
   Random rng;
 
-  /**
-   * Instantiates a new Maze.
-   */
+  /** Constructor sin parámetros */
   public Maze() { }
 
   /**
-   * Build.
+   * Construye el laberinto utilizando la matriz de enteros recibida.
    *
-   * @param matrix the matrix
+   * @param matrix la matriz de enteros de la entrada
    */
   public void build(int[][] matrix) {
+    /* Se inicializa la matriz */
     cells = new Cell[height][width];
+    /* Se itera la matriz para crear las celdas */
     for (int i = 0; i < height; i++) {
       for (int j = 0; j < width; j++) {
+        /* Se extrae la puntuación y las paredes de la matriz */
         String bitScore = String.format("%8s", Integer.toBinaryString(matrix[i][j])).replaceAll(" ", "0").substring(0, 4);
         char[] gates = String.format("%8s", Integer.toBinaryString(matrix[i][j])).replaceAll(" ", "0").substring(4, 8).toCharArray();
         byte score = (byte) Integer.parseInt(bitScore, 2);
+        /* Se crea una nueva celda con la información obtenida */
         cells[i][j] = new Cell(gates[0] == '1', gates[1] == '1', gates[2] == '1', gates[3] == '1', score, j, i);
-        maze.agrega(cells[i][j]);
-        if (i == 0 && !cells[i][j].up()) cells[i][j].far = true;
-        if (i == height - 1 && !cells[i][j].down()) cells[i][j].far = true;
-        if (j == width - 1 && !cells[i][j].right()) cells[i][j].far = true;
-        if (j == 0 && !cells[i][j].left()) cells[i][j].far = true;
-        if (cells[i][j].far && start == null) {
-          start = cells[i][j];
-        }
-        else if (cells[i][j].far && start != null) {
-          end = cells[i][j];
-        }
+        /* Se crea la gráfica */
+        createGraph(cells[i][j]);
       }
     }
   }
 
   /**
-   * Build.
+   * Construye y genera el laberinto utilizando los parámetros.
    *
-   * @param w    the w
-   * @param h    the h
-   * @param seed the seed
+   * @param w    el número de columnas del laberinto
+   * @param h    el número de filas del laberinto
+   * @param seed semilla que se utilizará para generar el laberinto
    */
   public void build(int w, int h, long seed) {
     width = w;
@@ -222,21 +204,27 @@ public class Maze {
   }
 
   /**
-   * Generate.
+   * Genera el laberinto utilizando DFS y un generador de números aleatorios con congruencias lineales.
    */
   public void generate() {
+    /* Se inicializa el generador de números aleatorios, si no hay semilla se utiliza el reloj de la computadora */
     rng = seed != 0 ? new Random(seed) : new Random();
+    /* Se inicializa la matriz */
     cells = new Cell[height][width];
+    /* Se itera la matriz para crear las celdas con una puntación aleatoria */
     for (int i = 0; i < height; i++) {
       for (int j = 0; j < width; j++) {
         cells[i][j] = new Cell(true, true, true, true, (byte) rng.nextInt(16), j, i);
       }
     }
+    /* Selecciona las celdas de inicio y fin aleatoriamente */
     int start, end;
     do {
       start = rng.nextInt(4);
       end = rng.nextInt(4);
     } while (start == end);
+    /* Puede que existan colisiones pues son completamente aleatorias.
+    * Entonces nos aseguramos de que no colisionen. */
     do {
       this.start = selectFars(start);
       this.end = selectFars(end);
@@ -247,8 +235,11 @@ public class Maze {
         this.start.gates[3] = true;
       }
     } while (this.start.equals(this.end));
+    /* Marca a las celdas de inicio y fin como extremos. Realmente sólo con la finalidad
+    * de poder resolver un laberinto recién creado. */
     this.start.far = true;
     this.end.far = true;
+    /* Algoritmo DFS para crear el laberinto aleatoriamente. */
     Pila<Cell> dfs = new Pila<>();
     dfs.mete(this.start);
     this.start.visited = true;
@@ -264,22 +255,27 @@ public class Maze {
     }
   }
 
+  /**
+   * Selecciona aleatoriamente un extremo del laberinto.
+   * @param side 0 - abajo, 1 - izquierda, 2 - arriba, 3 - derecha
+   * @return celda que ahora es el nuevo extremo
+   */
   private Cell selectFars(int side) {
     int random;
     switch (side) {
-      case 0: // Down
+      case 0: // Abajo
         random = rng.nextInt(width);
         cells[height - 1][random].gates[0] = false;
         return cells[height - 1][random];
-      case 1: // Left
+      case 1: // Izquierda
         random = rng.nextInt(height);
         cells[random][0].gates[1] = false;
         return cells[random][0];
-      case 2: // Up
+      case 2: // Arriba
         random = rng.nextInt(width);
         cells[0][random].gates[2] = false;
         return cells[0][random];
-      case 3: // Right
+      case 3: // Derecha
         random = rng.nextInt(height);
         cells[random][width - 1].gates[3] = false;
         return cells[random][width - 1];
@@ -289,24 +285,30 @@ public class Maze {
     }
   }
 
-  private void createGraph() {
-    for (int i = 0; i < height; i++) {
-      for (int j = 0; j < width; j++) {
-        maze.agrega(cells[i][j]);
-        if (i == 0 && !cells[i][j].up()) cells[i][j].far = true;
-        if (i == height - 1 && !cells[i][j].down()) cells[i][j].far = true;
-        if (j == width - 1 && !cells[i][j].right()) cells[i][j].far = true;
-        if (j == 0 && !cells[i][j].left()) cells[i][j].far = true;
-        if (cells[i][j].far && start == null) {
-          start = cells[i][j];
-        }
-        else if (cells[i][j].far && start != null) {
-          end = cells[i][j];
-        }
-      }
+  /**
+   * Construye el laberinto cómo gráfica.
+   * @param c celda que se agregará a la gráfica
+   */
+  private void createGraph(Cell c) {
+    /* Agrega la celda a la gráfica */
+    maze.agrega(c);
+    /* Verifica si la celda es un extremo del laberinto */
+    if (c.getY() == 0 && !c.up()) c.far = true;
+    if (c.getY() == height - 1 && !c.down()) c.far = true;
+    if (c.getX() == width - 1 && !c.right()) c.far = true;
+    if (c.getX() == 0 && !c.left()) c.far = true;
+    /* Se establece el inicio y el final del laberinto basado en si es extremo */
+    if (c.far && start == null) {
+      start = c;
+    }
+    else if (c.far && start != null) {
+      end = c;
     }
   }
 
+  /**
+   * Conecta las celdas en la gráfica si comparten una puerta, además le asigna una puntación a las puertas.
+   */
   private void connectEm() {
     for (int i = 0; i < height; i++) {
       for (int j = 0; j < width; j++) {
@@ -314,16 +316,17 @@ public class Maze {
         cells[i][j].gatesScore[2] = (byte) (1 + (cells[i][j].up() ? 0 : cells[i][j].score + (cells[i][j].far ? 0 : cells[i - 1][j].score)));
         cells[i][j].gatesScore[1] = (byte) (1 + (cells[i][j].left() ? 0 : cells[i][j].score + (cells[i][j].far ? 0 : cells[i][j - 1].score)));
         cells[i][j].gatesScore[0] = (byte) (1 + (cells[i][j].down() ? 0 : cells[i][j].score + (cells[i][j].far ? 0 : cells[i + 1][j].score)));
-        try {
-          if (!cells[i][j].right() && j+1 < width) maze.conecta(cells[i][j], cells[i][j+1], cells[i][j].gatesScore[3]);
-          if (!cells[i][j].up() && i-1 >= 0) maze.conecta(cells[i][j], cells[i-1][j], cells[i][j].gatesScore[2]);
-          if (!cells[i][j].left() && j-1 >= 0) maze.conecta(cells[i][j], cells[i][j-1], cells[i][j].gatesScore[1]);
-          if (!cells[i][j].down() && i+1 < height) maze.conecta(cells[i][j], cells[i+1][j], cells[i][j].gatesScore[0]);
-        } catch (IllegalArgumentException ignored) {}
+        if (!cells[i][j].right() && j+1 < width) maze.conecta(cells[i][j], cells[i][j+1], cells[i][j].gatesScore[3]);
+        if (!cells[i][j].down() && i+1 < height) maze.conecta(cells[i][j], cells[i+1][j], cells[i][j].gatesScore[0]);
       }
     }
   }
 
+  /**
+   * Regresa una lista con los movimientos posibles, celdas adyacentes válidas no visitadas.
+   * @param c celda origen
+   * @return lista con los movimientos posibles
+   */
   private Lista<Cell> possibleMoves(Cell c) {
     Lista<Cell> l = new Lista<>();
     if (isValidMove(c.x, c.y + 1)) l.agrega(cells[c.y + 1][c.x]); // Down
@@ -333,10 +336,23 @@ public class Maze {
     return l;
   }
 
+  /**
+   * Verifica si es un movimiento válido, es decir, no se sale de la matriz y no ha sido
+   * visitada.
+   * @param x coordenada x del destino
+   * @param y coordenada y del destino
+   * @return true si es válido, de lo contrario false
+   */
   private boolean isValidMove(int x, int y) {
     return x >= 0 && x < width && y >= 0 && y < height && !cells[y][x].visited;
   }
 
+  /**
+   * Crea una puerta entre una celda origen y una destino seleccionada aleatoriamente
+   * de la lista de movimientos posibles.
+   * @param c celda origen
+   * @return celda destino seleccionada aleatoriamente
+   */
   private Cell dig(Cell c) {
     Lista<Cell> l = possibleMoves(c);
     if (l.getElementos() == 0) return null;
@@ -344,26 +360,25 @@ public class Maze {
     if (goTo.y == c.y + 1) {
       c.gates[0] = false;
       goTo.gates[2] = false;
-    } // Down
+    } // Abajo
     if (goTo.x == c.x - 1) {
       c.gates[1] = false;
       goTo.gates[3] = false;
-    } // Left
+    } // Izquierda
     if (goTo.y == c.y - 1) {
       c.gates[2] = false;
       goTo.gates[0] = false;
-    } // Up
+    } // Arriba
     if (goTo.x == c.x + 1) {
       c.gates[3] = false;
       goTo.gates[1] = false;
-    } // Right
+    } // Derecha
     return goTo;
   }
 
   /**
-   * Solve lista.
-   *
-   * @return the lista
+   * Regresa una lista de celdas con la solución del laberinto, utilizando dijkstra.
+   * @return lista que contiene la solución
    */
   public Lista<Cell> solve() {
     solve = new Lista<>();
@@ -374,10 +389,10 @@ public class Maze {
   }
 
   /**
-   * Draw maze string.
+   * Regresa una cadena de texto en formato SVG con el laberinto y su solución.
    *
-   * @param solve the solve
-   * @return the string
+   * @param solve ¿Deberá dibujarse la solución?
+   * @return SVG del laberinto
    */
   public String drawMaze(boolean solve) {
     if (cells == null) throw new IllegalStateException("El laberinto no está inicializado");
@@ -385,20 +400,26 @@ public class Maze {
     StringBuilder s = new StringBuilder();
     s.append(graph.initSVG((width * 20) + (20 * 2), (height * 20) + (20 * 2)));
     if (solve) {
-      if (maze.getElementos() == 0) createGraph();
+      /* Para resolver un laberinto recién generado */
+      if (maze.getElementos() == 0)
+        for (int i = 0; i < height; i++)
+          for (int j = 0; j < width ; j++)
+            createGraph(cells[i][j]);
       connectEm();
       solve();
+      /* Dibuja la solución */
       s.append(drawSolution());
     }
     for (int i = 0; i < height; i++) {
       for (int j = 0; j < width; j++) {
+        /* Para evitar que se dibujen las paredes dos veces */
         boolean drawL = !cells[i][j - 1 < 0 ? 0 : j - 1].right() || j == 0;
         boolean drawU = !cells[i - 1 < 0 ? 0 : i - 1][j].down() || i == 0;
+        /* Dibuja la celda */
         s.append(graph.drawCell(10 + (cells[i][j].getX() + 1) * 20, 10 + (cells[i][j].getY() + 1) * 20,
                 cells[i][j].down(), cells[i][j].left() && drawL, cells[i][j].up() && drawU, cells[i][j].right()));
-        if (cells[i][j].equals(end)) s.append(graph.drawCircle(10 + (cells[i][j].getX() + 1) * 20, 10 + (cells[i][j].getY() + 1) * 20, 7, "none", "red"));
-        if (cells[i][j].equals(start)) s.append(graph.drawCircle(10 + (cells[i][j].getX() + 1) * 20, 10 + (cells[i][j].getY() + 1) * 20, 7, "none", "blue"));
-        if (cells[i][j].far) s.append(graph.drawCircle(10 + (cells[i][j].getX() + 1) * 20, 10 + (cells[i][j].getY() + 1) * 20, 3, "none", "purple"));
+        /* Si es extremo dibuja un circulo para denotarlo */
+        if (cells[i][j].far) s.append(graph.drawCircle(10 + (cells[i][j].getX() + 1) * 20, 10 + (cells[i][j].getY() + 1) * 20, 5, "none", "purple"));
       }
     }
     s.append(graph.closeSVG());
@@ -406,9 +427,8 @@ public class Maze {
   }
 
   /**
-   * Draw solution string.
-   *
-   * @return the string
+   * Regresa una cadena de texto en formato SVG con la solución del laberinto.
+   * @return SVG de la trayectoria de la solución
    */
   public String drawSolution() {
     GrapherSVG graph = new GrapherSVG();
@@ -422,28 +442,8 @@ public class Maze {
     return s.toString();
   }
 
-  /*
-  public String saveMaze() {
-    ByteArrayOutputStream out = new ByteArrayOutputStream();
-    out.write(77);
-    out.write(65);
-    out.write(90);
-    out.write(69);
-    out.write(height);
-    out.write(width);
-    for (int i = 0; i < height; i++) {
-      for (int j = 0; j < width; j++) {
-        out.write(cells[i][j].toByte());
-      }
-    }
-    return out.toString(StandardCharsets.ISO_8859_1);
-  }
-
-   */
-
-
   /**
-   * Save maze.
+   * Imprime el laberinto representado en bytes.
    */
   public void saveMaze() {
     try {
@@ -461,53 +461,7 @@ public class Maze {
       }
       out.close();
     } catch (IOException e) {
-      System.out.println(e);
+      System.err.println(e);
     }
   }
-/*
-  public String saveMaze() {
-    StringBuilder s = new StringBuilder();
-    s.append("M");
-    s.append("A");
-    s.append("Z");
-    s.append("E");
-    s.append((char) height);
-    s.append((char) width);
-    for (int i = 0; i < height; i++) {
-      for (int j = 0; j < width; j++) {
-        s.append((char)Integer.parseInt(Integer.toBinaryString(cells[i][j].score) + (cells[i][j].down() ? 1 : 0) + (cells[i][j].left() ? 1 : 0) + (cells[i][j].up() ? 1 : 0) + (cells[i][j].right() ? 1 : 0), 2));
-      }
-    }
-    return s.toString();
-  }
- */
-
-
-  /**
-   * Print.
-   */
-  public void print() {
-    for (Cell[] cell: cells) {
-      System.out.println(Arrays.toString(cell));
-    }
-  }
-
-  /*
-  public void print() {
-    for (int i = 0; i < height; i++) {
-      for (int j = 0; j < width; j++) {
-        System.out.print("⌜" + (cells[i][j].up() ? "--" : "  ") + "⌝");
-      }
-      System.out.println();
-      for (int j = 0; j < width; j++) {
-        System.out.print((cells[i][j].left() ? "|" : " ") + " " + (cells[i][j].right() ? "|" : " "));
-      }
-      System.out.println();
-      for (int j = 0; j < width; j++) {
-        System.out.print("⌞" + (cells[i][j].down() ? "--" : "  ") + "⌟");
-      }
-      System.out.println();
-    }
-  }
-   */
 }

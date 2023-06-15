@@ -37,7 +37,7 @@ public class Main extends Flags {
       System.out.println(maze.drawMaze(true));
     } else {
       maze.build(getWidth(), getHeight(), getSeed());
-      System.out.print(maze.saveMaze());
+      maze.saveMaze();
     }
   }
 

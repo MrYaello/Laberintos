@@ -5,6 +5,7 @@ import mx.unam.ciencias.edd.Lista;
 import mx.unam.ciencias.edd.Pila;
 import mx.unam.ciencias.edd.VerticeGrafica;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -64,6 +65,10 @@ public class Maze {
 
     public boolean equals(Cell cell) {
       return this.x == cell.x && this.y == cell.y;
+    }
+
+    public byte toByte() {
+      return (byte) (Integer.parseInt(Integer.toBinaryString(score) + (down() ? 1 : 0) + (left() ? 1 : 0) + (up() ? 1 : 0) + (right() ? 1 : 0), 2) & 0xFF);
     }
   }
 
@@ -289,6 +294,7 @@ public class Maze {
     return s.toString();
   }
 
+  /*
   public String saveMaze() {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     out.write(77);
@@ -299,11 +305,54 @@ public class Maze {
     out.write(width);
     for (int i = 0; i < height; i++) {
       for (int j = 0; j < width; j++) {
-        out.write(Integer.parseInt(Integer.toBinaryString(cells[i][j].score) + (cells[i][j].down() ? 1 : 0) + (cells[i][j].left() ? 1 : 0) + (cells[i][j].up() ? 1 : 0) + (cells[i][j].right() ? 1 : 0), 2));
+        out.write(cells[i][j].toByte());
       }
     }
     return out.toString(StandardCharsets.ISO_8859_1);
   }
+
+   */
+
+
+  public void saveMaze() {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    try {
+      BufferedOutputStream out = new BufferedOutputStream(baos);
+      out.write(77);
+      out.write(65);
+      out.write(90);
+      out.write(69);
+      out.write(height);
+      out.write(width);
+      for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+          out.write(cells[i][j].toByte());
+        }
+      }
+      out.close();
+    } catch (IOException e) {
+      System.out.println(e);
+    }
+    System.out.print(baos.toString(StandardCharsets.ISO_8859_1));
+  }
+/*
+  public String saveMaze() {
+    StringBuilder s = new StringBuilder();
+    s.append("M");
+    s.append("A");
+    s.append("Z");
+    s.append("E");
+    s.append((char) height);
+    s.append((char) width);
+    for (int i = 0; i < height; i++) {
+      for (int j = 0; j < width; j++) {
+        s.append((char)Integer.parseInt(Integer.toBinaryString(cells[i][j].score) + (cells[i][j].down() ? 1 : 0) + (cells[i][j].left() ? 1 : 0) + (cells[i][j].up() ? 1 : 0) + (cells[i][j].right() ? 1 : 0), 2));
+      }
+    }
+    return s.toString();
+  }
+ */
+
 
   public void print() {
     for (Cell[] cell: cells) {

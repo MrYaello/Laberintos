@@ -4,26 +4,54 @@ import mx.unam.ciencias.edd.Grafica;
 import mx.unam.ciencias.edd.Lista;
 import mx.unam.ciencias.edd.Pila;
 import mx.unam.ciencias.edd.VerticeGrafica;
-
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Random;
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
 
+/**
+ * Clase que administra y genera laberintos.
+ *
+ * @author Yael Lozano
+ */
 public class Maze {
+  /**
+   * Clase que administra las celdas del laberinto.
+   *
+   * @author Yael Lozano
+   */
   private class Cell {
-    int x, y;
+    /** Coordenada en x. */
+    int x;
+    /** Coordenada en y. */
+    int y;
+    /** Puntuación de la celda. */
     byte score;
+    /** Marca a la celda como visitada. Utilizado para generar el laberinto. */
     boolean visited;
+    /** Marca a la celda como extremo. Utilizada para resolver el laberinto. */
     boolean far;
+    /** Arreglo de longitud 4 que representa las paredes de la celda. */
     boolean[] gates;
+    /** Arreglo de longitud 4 que representa la puntuación de las puertas. */
     byte[] gatesScore;
 
+    /**
+     * Instantiates a new Cell.
+     */
     public Cell() { }
 
+    /**
+     * Instantiates a new Cell.
+     *
+     * @param d     the d
+     * @param l     the l
+     * @param u     the u
+     * @param r     the r
+     * @param score the score
+     * @param x     the x
+     * @param y     the y
+     */
     public Cell(boolean d, boolean l, boolean u, boolean r, byte score, int x, int y) {
       gates = new boolean[]{d, l, u, r};
       this.score = score;
@@ -32,26 +60,56 @@ public class Maze {
       this.y = y;
     }
 
+    /**
+     * Right boolean.
+     *
+     * @return the boolean
+     */
     public boolean right() {
       return gates[3];
     }
 
+    /**
+     * Up boolean.
+     *
+     * @return the boolean
+     */
     public boolean up() {
       return gates[2];
     }
 
+    /**
+     * Left boolean.
+     *
+     * @return the boolean
+     */
     public boolean left() {
       return gates[1];
     }
 
+    /**
+     * Down boolean.
+     *
+     * @return the boolean
+     */
     public boolean down() {
       return gates[0];
     }
 
+    /**
+     * Gets x.
+     *
+     * @return the x
+     */
     public int getX() {
       return x;
     }
 
+    /**
+     * Gets y.
+     *
+     * @return the y
+     */
     public int getY() {
       return y;
     }
@@ -63,25 +121,69 @@ public class Maze {
       return String.format("%d {%d, %d} %s", score, x, y, Arrays.toString(gates));
     }
 
+    /**
+     * Equals boolean.
+     *
+     * @param cell the cell
+     * @return the boolean
+     */
     public boolean equals(Cell cell) {
       return this.x == cell.x && this.y == cell.y;
     }
 
+    /**
+     * To byte byte.
+     *
+     * @return the byte
+     */
     public byte toByte() {
       return (byte) (Integer.parseInt(Integer.toBinaryString(score) + (down() ? 1 : 0) + (left() ? 1 : 0) + (up() ? 1 : 0) + (right() ? 1 : 0), 2) & 0xFF);
     }
   }
 
   private Cell[][] cells;
+  /**
+   * The Solve.
+   */
   public Lista<Cell> solve;
-  public Cell start, end;
+  /**
+   * The Start.
+   */
+  public Cell start, /**
+   * The End.
+   */
+  end;
+  /**
+   * The Width.
+   */
   public int width;
+  /**
+   * The Height.
+   */
   public int height;
+  /**
+   * The Seed.
+   */
   public long seed;
+  /**
+   * The Maze.
+   */
   public Grafica<Cell> maze = new Grafica<>();
+  /**
+   * The Rng.
+   */
   Random rng;
+
+  /**
+   * Instantiates a new Maze.
+   */
   public Maze() { }
 
+  /**
+   * Build.
+   *
+   * @param matrix the matrix
+   */
   public void build(int[][] matrix) {
     cells = new Cell[height][width];
     for (int i = 0; i < height; i++) {
@@ -105,6 +207,13 @@ public class Maze {
     }
   }
 
+  /**
+   * Build.
+   *
+   * @param w    the w
+   * @param h    the h
+   * @param seed the seed
+   */
   public void build(int w, int h, long seed) {
     width = w;
     height = h;
@@ -112,6 +221,9 @@ public class Maze {
     generate();
   }
 
+  /**
+   * Generate.
+   */
   public void generate() {
     rng = seed != 0 ? new Random(seed) : new Random();
     cells = new Cell[height][width];
@@ -248,6 +360,11 @@ public class Maze {
     return goTo;
   }
 
+  /**
+   * Solve lista.
+   *
+   * @return the lista
+   */
   public Lista<Cell> solve() {
     solve = new Lista<>();
     for (VerticeGrafica<Cell> c : maze.dijkstra(start, end)) {
@@ -256,6 +373,12 @@ public class Maze {
     return solve;
   }
 
+  /**
+   * Draw maze string.
+   *
+   * @param solve the solve
+   * @return the string
+   */
   public String drawMaze(boolean solve) {
     if (cells == null) throw new IllegalStateException("El laberinto no está inicializado");
     GrapherSVG graph = new GrapherSVG();
@@ -282,6 +405,11 @@ public class Maze {
     return s.toString();
   }
 
+  /**
+   * Draw solution string.
+   *
+   * @return the string
+   */
   public String drawSolution() {
     GrapherSVG graph = new GrapherSVG();
     StringBuilder s = new StringBuilder();
@@ -314,10 +442,12 @@ public class Maze {
    */
 
 
+  /**
+   * Save maze.
+   */
   public void saveMaze() {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
     try {
-      BufferedOutputStream out = new BufferedOutputStream(baos);
+      BufferedOutputStream out = new BufferedOutputStream(System.out);
       out.write(77);
       out.write(65);
       out.write(90);
@@ -333,7 +463,6 @@ public class Maze {
     } catch (IOException e) {
       System.out.println(e);
     }
-    System.out.print(baos.toString(StandardCharsets.ISO_8859_1));
   }
 /*
   public String saveMaze() {
@@ -354,6 +483,9 @@ public class Maze {
  */
 
 
+  /**
+   * Print.
+   */
   public void print() {
     for (Cell[] cell: cells) {
       System.out.println(Arrays.toString(cell));

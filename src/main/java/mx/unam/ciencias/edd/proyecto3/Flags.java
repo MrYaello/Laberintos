@@ -2,21 +2,22 @@ package mx.unam.ciencias.edd.proyecto3;
 
 /**
   * Clase que procesa las banderas recibidas por linea de comandos.
+ * @author Yael Lozano
   */
 public class Flags {
-  /* ¿Se deberá generar un laberinto? */
+  /** ¿Se deberá generar un laberinto? */
   private boolean generate;
-  /* La semilla que se utilizará para generar el laberinto */
+  /** La semilla que se utilizará para generar el laberinto */
   private long seed;
-  /* Parámetro que indica el número de renglones del laberinto */
+  /** Parámetro que indica el número de renglones del laberinto */
   private int height;
-  /* Parámetro que indica el número de columnas del laberinto */
+  /** Parámetro que indica el número de columnas del laberinto */
   private int width;
   
   /**
     * Método que procesa los argumentos recibidos por linea 
     * de comandos.
-    * @param args - Argumentos de linea de comandos.
+    * @param args argumentos de linea de comandos
     */
   public void flagsChecker(String[] args) {
     if (args.length == 0) return;
@@ -33,18 +34,39 @@ public class Flags {
     if (width < 2 || width > 255 || height < 2 || height > 255) throw new IllegalArgumentException("Los valores de altura o ancho son inválidos.");
   }
 
+
+  /**
+   * Getter para generate.
+   *
+   * @return generate
+   */
   public boolean generate() {
     return generate;
   }
 
+  /**
+   * Getter para el número de columnas.
+   *
+   * @return width
+   */
   public int getWidth() {
     return width;
   }
 
+  /**
+   * Getter para el número de filas.
+   *
+   * @return height
+   */
   public int getHeight() {
     return height;
   }
 
+  /**
+   * Getter para la semilla.
+   *
+   * @return seed
+   */
   public long getSeed() {
     return seed;
   }
